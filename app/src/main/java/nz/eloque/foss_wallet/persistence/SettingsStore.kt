@@ -60,6 +60,7 @@ class SettingsStore @Inject constructor(
 
     fun manualOrder(): List<String> = prefs.getString(MANUAL_ORDER, "")
         ?.split(',')
+        ?.map { it.trim() }
         ?.filter { it.isNotBlank() }
         ?: emptyList()
 

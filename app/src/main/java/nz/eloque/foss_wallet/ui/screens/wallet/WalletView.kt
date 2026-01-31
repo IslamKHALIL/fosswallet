@@ -138,7 +138,7 @@ fun WalletView(
 
                 updatedOrder.removeAt(fromPosition)
                 val desiredIndex = updatedOrder.indexOf(toId).takeIf { it >= 0 } ?: updatedOrder.size
-                val insertAt = if (desiredIndex > fromPosition) desiredIndex - 1 else desiredIndex
+                val insertAt = if (from.index < to.index) desiredIndex + 1 else desiredIndex
                 updatedOrder.add(insertAt.coerceIn(0, updatedOrder.size), fromId)
                 passViewModel.setManualOrder(updatedOrder)
             },
