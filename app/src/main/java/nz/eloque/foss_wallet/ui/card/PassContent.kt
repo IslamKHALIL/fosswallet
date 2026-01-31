@@ -25,6 +25,9 @@ fun ShortPassContent(
     allTags: Set<Tag>,
     cardColors: CardColors,
     modifier: Modifier = Modifier,
+    onBarcodeClick: (() -> Unit)? = null,
+    barcodeEnabled: Boolean = true,
+    barcodeTooltip: String? = null,
 ) {
     val context = LocalContext.current
 
@@ -53,6 +56,9 @@ fun ShortPassContent(
             localizedPass = localizedPass,
             allTags = allTags,
             readOnly = true,
+            onBarcodeClick = onBarcodeClick,
+            barcodeEnabled = barcodeEnabled,
+            barcodeTooltip = barcodeTooltip,
         )
     }
 }

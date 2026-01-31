@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Wallet
@@ -48,6 +49,12 @@ import nz.eloque.foss_wallet.model.Tag
 import nz.eloque.foss_wallet.ui.card.ShortPassCard
 import nz.eloque.foss_wallet.ui.components.GroupCard
 import nz.eloque.foss_wallet.ui.components.SwipeToDismiss
+import org.burnoutcrew.reorderable.ReorderableItem
+import org.burnoutcrew.reorderable.detectReorderAfterLongPress
+import org.burnoutcrew.reorderable.rememberReorderableLazyListState
+import org.burnoutcrew.reorderable.reorderable
+import java.time.Instant
+import java.util.Comparator
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,15 +79,34 @@ fun WalletView(
 
     val sortOption = rememberSaveable(stateSaver = SortOptionSaver) { mutableStateOf(SortOption.TimeAdded) }
 
+    val manualOrder by passViewModel.manualOrder.collectAsState()
+
     val tagToFilterFor = remember { mutableStateOf<Tag?>(null) }
 
-    val sortedPasses = passes
+    val manualOrdering = remember(passes, manualOrder) {
+        applyManualOrder(passes, manualOrder)
+    }
+
+    val filteredPasses = manualOrdering.ordered
         .filter { localizedPass -> passTypesToShow.any { localizedPass.pass.type.isSameType(it) } }
         .filter { localizedPass -> tagToFilterFor.value == null || localizedPass.tags.contains(tagToFilterFor.value) }
-        .sortedWith(sortOption.value.comparator)
+
+    val orderedPasses = if (sortOption.value == SortOption.Manual) {
+        filteredPasses
+    } else {
+        filteredPasses.sortedWith(sortOption.value.comparator)
+    }
+
+    if (sortOption.value == SortOption.Manual && manualOrdering.normalizedOrder != manualOrder) {
+        LaunchedEffect(manualOrdering.normalizedOrder) {
+            passViewModel.setManualOrder(manualOrdering.normalizedOrder)
+        }
+    }
+
+    val groupedPasses = orderedPasses
         .groupBy { it.pass.groupId }.toList()
 
-    if (sortedPasses.isEmpty()) {
+    if (groupedPasses.isEmpty()) {
         Box(modifier = modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
@@ -95,17 +121,47 @@ fun WalletView(
         }
     }
 
+    val baseListState = if (passes.isEmpty()) emptyState else listState
+
+    val groups = groupedPasses.filter { it.first != null }
+    val ungrouped = groupedPasses.filter { it.first == null }.flatMap { it.second }
+
+    val reorderableState = if (sortOption.value == SortOption.Manual) {
+        rememberReorderableLazyListState(
+            onMove = { from, to ->
+                val fromId = ungrouped.getOrNull(from.index)?.pass?.id ?: return@rememberReorderableLazyListState
+                val toId = ungrouped.getOrNull(to.index)?.pass?.id ?: return@rememberReorderableLazyListState
+
+                val updatedOrder = manualOrdering.normalizedOrder.toMutableList()
+                val fromPosition = updatedOrder.indexOf(fromId)
+                if (fromPosition == -1) return@rememberReorderableLazyListState
+
+                updatedOrder.removeAt(fromPosition)
+                val desiredIndex = updatedOrder.indexOf(toId).takeIf { it >= 0 } ?: updatedOrder.size
+                val insertAt = if (desiredIndex > fromPosition) desiredIndex - 1 else desiredIndex
+                updatedOrder.add(insertAt.coerceIn(0, updatedOrder.size), fromId)
+                passViewModel.setManualOrder(updatedOrder)
+            },
+            listState = baseListState
+        )
+    } else {
+        null
+    }
+
     LazyColumn(
-        state = if (passes.isEmpty()) emptyState else listState,
+        state = reorderableState?.listState ?: baseListState,
         verticalArrangement = Arrangement
             .spacedBy(8.dp),
         contentPadding = WindowInsets.navigationBars.asPaddingValues(),
         modifier = modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection)
+            .let { columnModifier ->
+                if (reorderableState != null) {
+                    columnModifier.reorderable(reorderableState)
+                } else columnModifier
+            }
     ) {
-        val groups = sortedPasses.filter { it.first != null }
-        val ungrouped = sortedPasses.filter { it.first == null }.flatMap { it.second }
 
         item {
             FilterBlock(
@@ -129,28 +185,79 @@ fun WalletView(
                 selectedPasses = selectedPasses
             )
         }
-        items(ungrouped) { pass ->
-            SwipeToDismiss(
-                leftSwipeIcon = Icons.Default.SelectAll,
-                allowRightSwipe = false,
-                onLeftSwipe = { if (selectedPasses.contains(pass)) selectedPasses.remove(pass) else selectedPasses.add(pass) },
-                onRightSwipe = { },
-                modifier = Modifier.padding(2.dp)
-            ) {
-                ShortPassCard(
-                    pass = pass,
-                    allTags = tags,
-                    onClick = {
-                        navController.navigate("pass/${pass.pass.id}")
-                    },
-                    selected = selectedPasses.contains(pass),
-                    barcodePosition = passViewModel.barcodePosition(),
-                    increaseBrightness = passViewModel.increasePassViewBrightness()
-                )
+        if (reorderableState != null) {
+            items(ungrouped, key = { it.pass.id }) { pass ->
+                ReorderableItem(reorderableState, key = pass.pass.id) { _ ->
+                    SwipeToDismiss(
+                        leftSwipeIcon = Icons.Default.SelectAll,
+                        allowRightSwipe = false,
+                        onLeftSwipe = { if (selectedPasses.contains(pass)) selectedPasses.remove(pass) else selectedPasses.add(pass) },
+                        onRightSwipe = { },
+                        modifier = Modifier
+                            .padding(2.dp)
+                            .detectReorderAfterLongPress(reorderableState)
+                    ) {
+                        ShortPassCard(
+                            pass = pass,
+                            allTags = tags,
+                            onClick = {
+                                navController.navigate("pass/${pass.pass.id}")
+                            },
+                            selected = selectedPasses.contains(pass),
+                            barcodePosition = passViewModel.barcodePosition(),
+                            increaseBrightness = passViewModel.increasePassViewBrightness()
+                        )
+                    }
+                }
+            }
+        } else {
+            items(ungrouped) { pass ->
+                SwipeToDismiss(
+                    leftSwipeIcon = Icons.Default.SelectAll,
+                    allowRightSwipe = false,
+                    onLeftSwipe = { if (selectedPasses.contains(pass)) selectedPasses.remove(pass) else selectedPasses.add(pass) },
+                    onRightSwipe = { },
+                    modifier = Modifier.padding(2.dp)
+                ) {
+                    ShortPassCard(
+                        pass = pass,
+                        allTags = tags,
+                        onClick = {
+                            navController.navigate("pass/${pass.pass.id}")
+                        },
+                        selected = selectedPasses.contains(pass),
+                        barcodePosition = passViewModel.barcodePosition(),
+                        increaseBrightness = passViewModel.increasePassViewBrightness()
+                    )
+                }
             }
         }
         item {
             Spacer(modifier = Modifier.padding(4.dp))
         }
     }
+}
+
+private data class ManualOrderingResult(
+    val ordered: List<LocalizedPassWithTags>,
+    val normalizedOrder: List<String>
+)
+
+private fun applyManualOrder(
+    passes: List<LocalizedPassWithTags>,
+    storedOrder: List<String>,
+): ManualOrderingResult {
+    val passById = passes.associateBy { it.pass.id }
+    val existing = storedOrder.distinct().mapNotNull { passById[it] }
+    val missing = passes.filterNot { storedOrder.contains(it.pass.id) }
+        .sortedWith(
+            Comparator.comparing<LocalizedPassWithTags, Instant?>(
+                { it.pass.addedAt },
+                Comparator.reverseOrder()
+            )
+        )
+
+    val orderedPasses = missing + existing
+    val normalizedOrder = orderedPasses.map { it.pass.id }
+    return ManualOrderingResult(orderedPasses, normalizedOrder)
 }

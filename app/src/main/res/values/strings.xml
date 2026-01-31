@@ -63,6 +63,11 @@
     <string name="date_added">Date added</string>
     <string name="relevant_date_newest">Newest relevant date</string>
     <string name="relevant_date_oldest">Oldest relevant date</string>
+    <string name="sort_name">Name</string>
+    <string name="sort_created_at">Date created</string>
+    <string name="sort_manual">Manual order</string>
+    <string name="show_barcode">Show barcode</string>
+    <string name="no_barcode_available">No barcode available</string>
     <string name="selected">Selected</string>
     <string name="filter">Sort by</string>
     <string name="libraries">Libraries</string>

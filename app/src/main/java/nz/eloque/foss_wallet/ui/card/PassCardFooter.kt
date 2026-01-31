@@ -8,11 +8,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.PlainTooltipBox
+import androidx.compose.material3.TooltipBoxScope.tooltipAnchor
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +46,9 @@ fun PassCardFooter(
     onTagAdd: (Tag) -> Unit = {},
     onTagCreate: (Tag) -> Unit = {},
     readOnly: Boolean = false,
+    onBarcodeClick: (() -> Unit)? = null,
+    barcodeEnabled: Boolean = true,
+    barcodeTooltip: String? = null,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -114,7 +122,26 @@ fun PassCardFooter(
                 )
             }
         } else {
-            Spacer(Modifier.width(12.dp))
+            val tooltipState = rememberTooltipState()
+            if (onBarcodeClick != null && barcodeTooltip != null) {
+                PlainTooltipBox(
+                    tooltip = { Text(barcodeTooltip) },
+                    state = tooltipState
+                ) {
+                    IconButton(
+                        onClick = onBarcodeClick,
+                        enabled = barcodeEnabled,
+                        modifier = Modifier.tooltipAnchor()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.QrCode,
+                            contentDescription = stringResource(R.string.show_barcode)
+                        )
+                    }
+                }
+            } else {
+                Spacer(Modifier.width(12.dp))
+            }
         }
 
         if (tagChooserShown) {

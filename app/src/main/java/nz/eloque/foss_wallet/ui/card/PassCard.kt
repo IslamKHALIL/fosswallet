@@ -2,8 +2,6 @@ package nz.eloque.foss_wallet.ui.card
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.CardColors
@@ -20,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.res.stringResource
 import nz.eloque.foss_wallet.model.LocalizedPassWithTags
 import nz.eloque.foss_wallet.model.PassColors
 import nz.eloque.foss_wallet.model.Tag
@@ -28,6 +27,7 @@ import nz.eloque.foss_wallet.ui.components.FullscreenBarcode
 import nz.eloque.foss_wallet.ui.components.SelectionIndicator
 import nz.eloque.foss_wallet.ui.effects.UpdateBrightness
 import nz.eloque.foss_wallet.utils.darken
+import nz.eloque.foss_wallet.R
 
 
 @Composable
@@ -44,6 +44,13 @@ fun ShortPassCard(
     val cardColors = passCardColors(pass.pass.colors, toned)
     val scale by animateFloatAsState(if (selected) 0.95f else 1f)
     var showBarcode by remember { mutableStateOf(false) }
+    val firstBarcode = pass.pass.barCodes.firstOrNull()
+    val hasBarcode = firstBarcode != null
+    val barcodeTooltip = if (hasBarcode) {
+        stringResource(R.string.show_barcode)
+    } else {
+        stringResource(R.string.no_barcode_available)
+    }
 
     Box(
         modifier = Modifier.fillMaxWidth()
@@ -53,17 +60,19 @@ fun ShortPassCard(
             modifier = modifier
                 .fillMaxWidth()
                 .scale(scale)
-                .combinedClickable(
-                    onClick = onClick,
-                    onLongClick = {
-                        pass.pass.barCodes.firstOrNull()?.let { showBarcode = true }
-                    }
-                )
+                .clickable(onClick = onClick)
         ) {
             ShortPassContent(
                 localizedPass = pass,
                 cardColors = cardColors,
                 allTags = allTags,
+                onBarcodeClick = {
+                    if (hasBarcode) {
+                        showBarcode = true
+                    }
+                },
+                barcodeEnabled = hasBarcode,
+                barcodeTooltip = barcodeTooltip,
             )
         }
         if (selected) {
@@ -71,7 +80,7 @@ fun ShortPassCard(
         }
     }
 
-    pass.pass.barCodes.firstOrNull()?.let { barcode ->
+    firstBarcode?.let { barcode ->
         val image = barcode.encodeAsBitmap(
             if (barcode.is1d()) 3000 else 1000,
             1000,

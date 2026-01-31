@@ -39,6 +39,9 @@ class PassViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val filteredPasses = queryState.flatMapMerge { passStore.filtered(it.query) }
 
+    private val _manualOrder = MutableStateFlow(settingsStore.manualOrder())
+    val manualOrder: StateFlow<List<String>> = _manualOrder.asStateFlow()
+
     val allTags = tagRepository.all()
 
     fun passFlowById(id: String) = passStore.passFlowById(id)
@@ -78,4 +81,15 @@ class PassViewModel @Inject constructor(
 
     fun increasePassViewBrightness(): Boolean = settingsStore.increasePassViewBrightness()
     fun toggleLegacyRendering(pass: Pass) = passStore.toggleLegacyRendering(pass)
+
+    fun setManualOrder(order: List<String>) {
+        val cleanedOrder = order.distinct()
+        if (cleanedOrder == _manualOrder.value) {
+            return
+        }
+        viewModelScope.launch {
+            _manualOrder.value = cleanedOrder
+            settingsStore.setManualOrder(cleanedOrder)
+        }
+    }
 }

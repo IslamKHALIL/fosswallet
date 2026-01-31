@@ -14,6 +14,7 @@ private const val SYNC_INTERVAL = "syncInterval"
 private const val SYNC_ENABLED = "syncEnabled"
 private const val BARCODE_POSITION = "barcodePosition"
 private const val PASS_VIEW_BRIGHTNESS = "passViewBrightness"
+private const val MANUAL_ORDER = "manualOrder"
 
 sealed class BarcodePosition(val arrangement: Arrangement.Vertical, val key: String, @param:StringRes val label: Int) {
     object Top : BarcodePosition(Arrangement.Top, "TOP", R.string.barcode_position_top)
@@ -56,4 +57,13 @@ class SettingsStore @Inject constructor(
     fun barcodePosition(): BarcodePosition = BarcodePosition.of(prefs.getString(BARCODE_POSITION, BarcodePosition.Center.key)!!)
 
     fun setBarcodePosition(barcodePosition: BarcodePosition) = prefs.edit { putString(BARCODE_POSITION, barcodePosition.key) }
+
+    fun manualOrder(): List<String> = prefs.getString(MANUAL_ORDER, "")
+        ?.split(',')
+        ?.filter { it.isNotBlank() }
+        ?: emptyList()
+
+    fun setManualOrder(order: List<String>) = prefs.edit {
+        putString(MANUAL_ORDER, order.joinToString(separator = ","))
+    }
 }
