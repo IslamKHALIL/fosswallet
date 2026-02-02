@@ -1,16 +1,28 @@
 # Build Environment Issues and Solutions
 
-## Issue: Android Gradle Plugin Cannot Be Downloaded
+## Issue: Android Gradle Plugin Cannot Be Downloaded in Sandbox
 
 ### Problem
-When running `./gradlew` commands, you may see errors like:
+When running `./gradlew` commands **in this sandboxed environment**, you may see errors like:
 ```
-Plugin [id: 'com.android.application', version: 'X.X.X'] was not found
+Plugin [id: 'com.android.application', version: '8.13.2'] was not found
 Could not resolve host: dl.google.com
 ```
 
 ### Root Cause
-The build environment cannot access external Maven repositories (specifically `dl.google.com` for the Android Gradle Plugin). This prevents Gradle from downloading required dependencies.
+**The Android Gradle Plugin version 8.13.2 is valid and exists** on Maven repositories (confirmed at https://mvnrepository.com/artifact/com.android.tools.build/gradle/8.13.2).
+
+**The issue is the sandboxed environment cannot access external Maven repositories** (specifically `dl.google.com` for the Android Gradle Plugin). This is a **network restriction in the sandbox**, not an issue with the version number.
+
+### Important: The Version is Correct
+
+The project uses `androidGradlePlugin = "8.13.2"` which is:
+- ✅ **Valid** - Exists in Maven repositories
+- ✅ **Current** - Released version from the Android team
+- ✅ **Will work in GitHub Actions** - GitHub Actions has proper network access
+- ❌ **Won't work in sandboxes** - Network restrictions prevent download
+
+**Do not change this version** - it is correct for the project.
 
 ### Solutions
 
@@ -118,10 +130,10 @@ When workflows run in GitHub Actions:
 
 The `gradle/libs.versions.toml` file specifies:
 ```toml
-androidGradlePlugin = "8.3.2"
+androidGradlePlugin = "8.13.2"
 ```
 
-This is a stable version that works in GitHub Actions. The version was originally set to `8.13.2` which doesn't exist - this has been corrected.
+**This is the correct version.** It exists on Maven repositories and will work in GitHub Actions. The version cannot be downloaded in this sandboxed environment due to network restrictions, but this does not indicate a problem with the version itself.
 
 ### Troubleshooting in GitHub Actions
 
