@@ -25,8 +25,8 @@ class MainFlowE2ETest {
         composeTestRule.waitForIdle()
         
         // Check if the app is running by verifying we can interact with the UI
-        // Most apps show some form of content, even if it's empty state
-        assert(true) // App launched successfully if we reach here
+        // The root element should exist, indicating the app has launched successfully
+        composeTestRule.onRoot().assertExists()
     }
 
     @Test

@@ -60,7 +60,9 @@ class BarCodeTest {
             StandardCharsets.UTF_8,
             null
         )
-        assertTrue("PDF_417 should be 1D", barcode.is1d())
+        // PDF_417 is treated as 1D in the implementation because it's a stacked linear barcode
+        // that scans linearly, even though technically it's a 2D stacked barcode format
+        assertTrue("PDF_417 should be classified as 1D according to implementation", barcode.is1d())
     }
 
     @Test
