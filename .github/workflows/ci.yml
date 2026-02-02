@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v3
@@ -38,7 +38,7 @@ jobs:
     needs: validation
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Copy CI gradle.properties
         run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
@@ -57,7 +57,7 @@ jobs:
 
       - name: Upload Lint Results
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: lint-results
           path: app/build/reports/lint-results-debug.html
@@ -69,7 +69,7 @@ jobs:
     needs: validation
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Copy CI gradle.properties
         run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
@@ -88,14 +88,14 @@ jobs:
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: unit-test-results
           path: app/build/reports/tests/testDebugUnitTest/
 
       - name: Upload Test Coverage
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: unit-test-coverage
           path: app/build/reports/coverage/
@@ -110,7 +110,7 @@ jobs:
         api-level: [28, 34]  # Test on minimum and recent API levels
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Copy CI gradle.properties
         run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
@@ -144,7 +144,7 @@ jobs:
 
       - name: Upload Instrumented Test Results
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: instrumented-test-results-api-${{ matrix.api-level }}
           path: app/build/reports/androidTests/connected/
@@ -156,7 +156,7 @@ jobs:
     needs: [lint, unit-tests]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Copy CI gradle.properties
         run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
@@ -174,7 +174,7 @@ jobs:
         run: ./gradlew assembleDebug
 
       - name: Upload Debug APK
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: debug-apk
           path: app/build/outputs/apk/debug/*.apk
