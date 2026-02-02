@@ -14,9 +14,10 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.PlainTooltipBox
-import androidx.compose.material3.TooltipBoxScope.tooltipAnchor
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -122,16 +123,15 @@ fun PassCardFooter(
                 )
             }
         } else {
-            val tooltipState = rememberTooltipState()
             if (onBarcodeClick != null && barcodeTooltip != null) {
-                PlainTooltipBox(
-                    tooltip = { Text(barcodeTooltip) },
-                    state = tooltipState
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                    tooltip = { PlainTooltip { Text(barcodeTooltip) } },
+                    state = rememberTooltipState()
                 ) {
                     IconButton(
                         onClick = onBarcodeClick,
-                        enabled = barcodeEnabled,
-                        modifier = Modifier.tooltipAnchor()
+                        enabled = barcodeEnabled
                     ) {
                         Icon(
                             imageVector = Icons.Default.QrCode,
