@@ -10,19 +10,9 @@ Could not resolve host: dl.google.com
 ```
 
 ### Root Cause
-**The Android Gradle Plugin version 8.13.2 is valid and exists** on Maven repositories (confirmed at https://mvnrepository.com/artifact/com.android.tools.build/gradle/8.13.2).
+The sandboxed build environment cannot access external Maven repositories (specifically `dl.google.com` for the Android Gradle Plugin). This prevents Gradle from downloading required dependencies.
 
-**The issue is the sandboxed environment cannot access external Maven repositories** (specifically `dl.google.com` for the Android Gradle Plugin). This is a **network restriction in the sandbox**, not an issue with the version number.
-
-### Important: The Version is Correct
-
-The project uses `androidGradlePlugin = "8.13.2"` which is:
-- ✅ **Valid** - Exists in Maven repositories
-- ✅ **Current** - Released version from the Android team
-- ✅ **Will work in GitHub Actions** - GitHub Actions has proper network access
-- ❌ **Won't work in sandboxes** - Network restrictions prevent download
-
-**Do not change this version** - it is correct for the project.
+This is a **network restriction in the sandbox**, not an issue with the project configuration.
 
 ### Solutions
 
@@ -125,15 +115,6 @@ When workflows run in GitHub Actions:
 - Same checks as CI workflow
 - Must pass before merge is allowed
 - Provides status checks for branch protection
-
-### Current AGP Version
-
-The `gradle/libs.versions.toml` file specifies:
-```toml
-androidGradlePlugin = "8.13.2"
-```
-
-**This is the correct version.** It exists on Maven repositories and will work in GitHub Actions. The version cannot be downloaded in this sandboxed environment due to network restrictions, but this does not indicate a problem with the version itself.
 
 ### Troubleshooting in GitHub Actions
 
