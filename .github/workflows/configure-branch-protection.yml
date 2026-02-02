@@ -1,0 +1,88 @@
+name: Configure Branch Protection
+
+# This workflow configures branch protection rules for the main branch
+# It requires admin permissions and a GitHub token with appropriate scopes
+
+on:
+  workflow_dispatch:  # Manual trigger only for security
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/configure-branch-protection.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  configure-protection:
+    name: Configure Main Branch Protection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Configure Branch Protection
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "🔒 Configuring branch protection for main branch..."
+          
+          # Note: This requires a personal access token with admin:repo_hook scope
+          # stored as a secret named BRANCH_PROTECTION_TOKEN
+          
+          if [ -z "${{ secrets.BRANCH_PROTECTION_TOKEN }}" ]; then
+            echo "⚠️  BRANCH_PROTECTION_TOKEN secret not found."
+            echo "📋 Please configure branch protection manually using the steps in BRANCH_PROTECTION.md"
+            exit 0
+          fi
+          
+          # Configure branch protection using GitHub API
+          curl -X PUT \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.BRANCH_PROTECTION_TOKEN }}" \
+            "https://api.github.com/repos/${REPO}/branches/main/protection" \
+            -d '{
+              "required_status_checks": {
+                "strict": true,
+                "contexts": [
+                  "Gradle Wrapper Validation",
+                  "Lint Check",
+                  "Unit Tests",
+                  "Integration Tests",
+                  "Build Verification",
+                  "PR Validation Complete"
+                ]
+              },
+              "enforce_admins": true,
+              "required_pull_request_reviews": {
+                "dismiss_stale_reviews": true,
+                "require_code_owner_reviews": false,
+                "required_approving_review_count": 1
+              },
+              "restrictions": null,
+              "required_linear_history": false,
+              "allow_force_pushes": false,
+              "allow_deletions": false,
+              "required_conversation_resolution": true
+            }' || {
+              echo "❌ Failed to configure branch protection via API"
+              echo "📋 Please configure manually using the steps in BRANCH_PROTECTION.md"
+              exit 0
+            }
+          
+          echo "✅ Branch protection configured successfully!"
+
+      - name: Verify Configuration
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "🔍 Verifying branch protection settings..."
+          
+          # Try to get branch protection status
+          curl -s -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/${REPO}/branches/main/protection" \
+            || echo "⚠️  Unable to verify (may require additional permissions)"

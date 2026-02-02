@@ -44,9 +44,13 @@ FossWallet can be translated via [Weblate](https://hosted.weblate.org/projects/f
 
 ## Development (Fork-Specific)
 
+[![CI Pipeline](https://github.com/IslamKHALIL/fosswallet/actions/workflows/ci.yml/badge.svg)](https://github.com/IslamKHALIL/fosswallet/actions/workflows/ci.yml)
+[![PR Validation](https://github.com/IslamKHALIL/fosswallet/actions/workflows/pr-validation.yml/badge.svg)](https://github.com/IslamKHALIL/fosswallet/actions/workflows/pr-validation.yml)
+
 This fork includes additional CI/CD pipelines and comprehensive test coverage to ensure code quality before contributing upstream.
 
 📖 **Documentation:**
+- [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) - **Branch protection setup guide (REQUIRED)**
 - [TESTING.md](TESTING.md) - Testing infrastructure and CI/CD overview
 - [CI_CD_PIPELINE.md](CI_CD_PIPELINE.md) - Detailed CI/CD pipeline documentation
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Quick reference guide for contributors
@@ -57,6 +61,10 @@ This fork includes additional CI/CD pipelines and comprehensive test coverage to
 - Automated testing on all branches
 - PR validation before merging to main
 - Lint, build, and test verification
+
+🔒 **Branch Protection:** Requires approved PRs to merge to main
+- See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) for setup instructions
+- Run `./scripts/verify-branch-protection.sh` to verify configuration
 
 **Note:** These enhancements are for fork maintenance only and are not intended for upstream contribution.
 
