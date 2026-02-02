@@ -42,6 +42,24 @@ FossWallet can be translated via [Weblate](https://hosted.weblate.org/projects/f
 
 [![Translation status](https://hosted.weblate.org/widget/fosswallet/app/multi-auto.svg)](https://hosted.weblate.org/engage/fosswallet/)
 
+## Development (Fork-Specific)
+
+This fork includes additional CI/CD pipelines and comprehensive test coverage to ensure code quality before contributing upstream.
+
+📖 **Documentation:**
+- [TESTING.md](TESTING.md) - Testing infrastructure and CI/CD overview
+- [CI_CD_PIPELINE.md](CI_CD_PIPELINE.md) - Detailed CI/CD pipeline documentation
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Quick reference guide for contributors
+
+🧪 **Test Coverage:** 62 automated tests (Unit, Integration, E2E)
+
+🔄 **CI/CD Pipelines:**
+- Automated testing on all branches
+- PR validation before merging to main
+- Lint, build, and test verification
+
+**Note:** These enhancements are for fork maintenance only and are not intended for upstream contribution.
+
 ## License
 
 This project is licensed under the [GNU General Public License v3.0](LICENSE).
