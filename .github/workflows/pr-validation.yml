@@ -13,6 +13,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Restrict permissions for security
+permissions:
+  contents: read
+
 jobs:
   # Run all quality checks before allowing merge to main
   validate-pr:
